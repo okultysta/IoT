@@ -12,18 +12,18 @@ Email_Recipient = "testapcupsd@gmail.com"
 
 
 
+def sendMassage(subject, msg):
+    email = EmailMessage()
+    email['From'] = Sender_Email
+    email['To'] = Email_Recipient
+    email['Subject'] = subject
+    email.set_content(msg)
 
-email = EmailMessage()
-email['From'] = Sender_Email
-email['To'] = Email_Recipient
-email['Subject'] = "Test Email"
-email.set_content("This is a test email")
+    with smtplib.SMTP(SMTP_Server, SMTP_Port) as server:
+        server.starttls()
+        server.login(SMTP_User, SMTP_Password)
+        server.send_message(email)
+        server.quit()
 
-with smtplib.SMTP(SMTP_Server, SMTP_Port) as server:
-    server.starttls()
-    server.login(SMTP_User, SMTP_Password)
-    server.send_message(email)
-    server.quit()
-
-print("Email sent!")
+    print("Email sent!")
 
