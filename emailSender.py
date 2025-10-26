@@ -26,4 +26,7 @@ def sendMassage(subject, msg):
         server.quit()
 
     print("Email sent!")
+    print(subject)
+    print()
+    print(msg)
 
