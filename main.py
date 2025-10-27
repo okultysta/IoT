@@ -12,8 +12,11 @@ battery_below_20_send = False
 online_send = False
 exception_send = False
 
+first_battery_threshold = 50
+second_battery_threshold = 20
 time_counter = 0
 time_threshold = 3600
+period = 5
 
 
 while True:
@@ -56,18 +59,18 @@ while True:
                 exception_send = False
                 time_counter = 0
                 emailSender.send_massage(subcejt, msg)
-            elif (float(battery)<50) & (float(battery)>=20) & (battery_below_50_send==False):
+            elif (float(battery)<first_battery_threshold) & (float(battery)>=second_battery_threshold) & (battery_below_50_send==False):
                 subcejt = "UPS: Battery half empty"
-                msg = """ALERT: The battery charge level has dropped below 50%.
+                msg = "ALERT: The battery charge level has dropped below "+str(first_battery_threshold)+"""%.
                 """ + "\r\nCurrent battery charge level is " + str(battery) + """%.
                 """ + "\r\nEstimated by APC time till battery runs out: " + str(time_left) + """
                 """ + "\r\n\nInformation from \r\n"+"Date: "+str(date)+"\r\ntime: "+str(time)+"\r\ntime zone: "+str(time_zone)
                 battery_below_50_send = True
                 time_counter = 0
                 emailSender.send_massage(subcejt, msg)
-            elif (float(battery)<20) & (battery_below_20_send==False):
+            elif (float(battery)<second_battery_threshold) & (battery_below_20_send==False):
                 subcejt = "UPS: BATTERY CRITICALLY LOW"
-                msg = """EMERGENCY: The battery charge level has dropped below 20%. Take the necessary actions to prevent system failure.
+                msg = "EMERGENCY: The battery charge level has dropped below "+str(second_battery_threshold)+"""%. Take the necessary actions to prevent system failure.
                 """ + "\r\nCurrent battery charge level is " + str(battery) + """%.
                 """ + "\r\nEstimated by APC time till battery runs out: " + str(time_left) + """
                 """ + "\r\n\nInformation from \r\n"+"Date: "+str(date)+"\r\ntime: "+str(time)+"\r\ntime zone: "+str(time_zone)
@@ -106,5 +109,5 @@ while True:
         exception_send = False
         time_counter = 0
 
-    time_counter += 5
-    tm.sleep(5)
+    time_counter += period
+    tm.sleep(period)

@@ -7,7 +7,6 @@ def get_ups_status():
     except subprocess.CalledProcessError:
         return None, None, None, None, None, None
 
-
     status = None
     battery = None
     time_left = None
