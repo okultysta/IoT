@@ -6,6 +6,4 @@ Sender_Email = "testapcsender@zohomail.eu"
 
 Recipients:
 testapcupsd@gmail.com
-example@poczta.pl
-xddx@pomidor.eu
 END
