@@ -1,4 +1,4 @@
-
+import subprocess
 """
 przydatne dane z apc:
 STATUS : UPS status (online, charging, on battery etc)
@@ -7,13 +7,13 @@ TIMELEFT: Remaining runtime left on battery as estimated by the UPS
 ENDAPC : Date and time of status information was written
 """
 
-def get_ups_status(output):
-    """
+def get_ups_status():
+
     try:
         output = subprocess.check_output(['apcaccess', 'status'], text=True)
     except subprocess.CalledProcessError:
-        return None, None, None, None
-    """
+        return None, None, None, None, None, None
+
 
     status = None
     battery = None
