@@ -1,32 +1,72 @@
 from email.message import EmailMessage
 import smtplib
 
-# Parametry połączenia do serwera SMTP
-SMTP_Server = "smtp.zoho.eu"
-SMTP_Port = 587
-SMTP_User = "testapcsender@zohomail.eu"
-SMTP_Password = "Student.251482"
+def load_emails(filename="email_config.txt"):
+    recipients = []
+    inside_block = False
 
-Sender_Email = "testapcsender@zohomail.eu"
-Email_Recipient = "testapcupsd@gmail.com"
+    with open(filename, "r") as file:
+        for line in file:
+            if line.startswith("SMTP_Server"):
+                SMTP_Server = line.split("=")[1].strip()
+            elif line.startswith("SMTP_Port"):
+                SMTP_Port = int(line.split("=")[1].strip())
+            elif line.startswith("SMTP_User"):
+                SMTP_User = line.split("=")[1].strip()
+            elif line.startswith("SMTP_Password"):
+                SMTP_Password = line.split("=")[1].strip()
+            elif line.startswith("Sender_Email"):
+                Sender_Email = line.split("=")[1].strip()
+
+        file.seek(0)
+
+        for line in file:
+            line = line.strip()
+
+            if line == "Recipients:":
+                inside_block = True
+                continue
+
+            if line == "END":
+                inside_block = False
+                continue
+
+            if inside_block:
+                recipients.append(line)
+
+        return SMTP_Server, SMTP_Port, SMTP_User, SMTP_Password, Sender_Email, recipients
 
 
+def send_massage(subject, msg):
+    SMTP_Server, SMTP_Port, SMTP_User, SMTP_Password, Sender_Email, recipients = load_emails()
 
-def sendMassage(subject, msg):
-    email = EmailMessage()
-    email['From'] = Sender_Email
-    email['To'] = Email_Recipient
-    email['Subject'] = subject
-    email.set_content(msg)
+    for recipient in recipients:
+        email = EmailMessage()
+        email['From'] = Sender_Email
+        email['To'] = recipient
+        email['Subject'] = subject
+        email.set_content(msg)
 
-    with smtplib.SMTP(SMTP_Server, SMTP_Port) as server:
-        server.starttls()
-        server.login(SMTP_User, SMTP_Password)
-        server.send_message(email)
-        server.quit()
+        with smtplib.SMTP(SMTP_Server, SMTP_Port) as server:
+            server.starttls()
+            server.login(SMTP_User, SMTP_Password)
+            server.send_message(email)
+            server.quit()
 
-    print("Email sent!")
-    print(subject)
-    print()
-    print(msg)
+        print("Email to "+recipient+" has been send")
+        print(subject)
+        print()
+        print(msg)
 
+SMTP_Server, SMTP_Port, SMTP_User, SMTP_Password, Sender_Email, recipients = load_emails()
+print(SMTP_Server)
+print()
+print(SMTP_Port)
+print()
+print(SMTP_User)
+print()
+print(SMTP_Password)
+print()
+print(Sender_Email)
+print()
+print(recipients)

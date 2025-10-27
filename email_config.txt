@@ -1,0 +1,11 @@
+SMTP_Server = smtp.zoho.eu
+SMTP_Port = 587
+SMTP_User = testapcsender@zohomail.eu
+SMTP_Password = Student.251482
+Sender_Email = "testapcsender@zohomail.eu"
+
+Recipients:
+testapcupsd@gmail.com
+example@poczta.pl
+xddx@pomidor.eu
+END
