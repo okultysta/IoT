@@ -12,16 +12,10 @@ battery_below_20_send = False
 online_send = False
 exception_send = False
 
-first_battery_threshold = 50
-second_battery_threshold = 20
-time_counter = 0
-time_threshold = 3600
-period = 5
-
-
 while True:
 
-    status, battery, time_left, date, time, time_zone = APC_status.get_ups_status()
+    first_battery_threshold, second_battery_threshold, time_counter, time_threshold, period = emailSender.load_settings()
+    status, battery, time_left, date, time, time_zone = "COMMLOST", "98", "50", "12.14.15", "12.00", "X+2"#APC_status.get_ups_status()
     if (status is None) & (exception_send == False):
         subcejt = "UPS: Exception warning"
         msg = """WARNING: Caught exception in subprocess. Unable to read UPS status."""

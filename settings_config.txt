@@ -1,0 +1,5 @@
+first_battery_threshold = 50
+second_battery_threshold = 20
+time_counter = 0
+time_threshold = 3600
+period = 5

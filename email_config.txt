@@ -2,7 +2,10 @@ SMTP_Server = smtp.zoho.eu
 SMTP_Port = 587
 SMTP_User = testapcsender@zohomail.eu
 SMTP_Password = Student.251482
+IMAP_SERVER = imap.zoho.eu
+IMAP_Port = 993
 Sender_Email = testapcsender@zohomail.eu
+
 
 Recipients:
 testapcupsd@gmail.com
