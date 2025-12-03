@@ -14,6 +14,8 @@ online_send = False
 exception_send = False
 time_counter = 0
 
+emailSender.send_massage(None, "Initial message", "The program has started. Already monitoring APC.")
+
 while True:
     first_battery_threshold, second_battery_threshold, time_threshold, period = file_loader.load_settings()
     status, battery, time_left, date, time, time_zone = APC_status.get_ups_status()
