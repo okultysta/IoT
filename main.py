@@ -1,6 +1,7 @@
 import APC_status
 import emailSender
 import time as tm
+import file_loader
 
 msg = ""
 subject = ""
@@ -11,15 +12,15 @@ battery_below_50_send = False
 battery_below_20_send = False
 online_send = False
 exception_send = False
+time_counter = 0
 
 while True:
-
-    first_battery_threshold, second_battery_threshold, time_counter, time_threshold, period = emailSender.load_settings()
-    status, battery, time_left, date, time, time_zone = "COMMLOST", "98", "50", "12.14.15", "12.00", "X+2"#APC_status.get_ups_status()
+    first_battery_threshold, second_battery_threshold, time_threshold, period = file_loader.load_settings()
+    status, battery, time_left, date, time, time_zone = APC_status.get_ups_status()
     if (status is None) & (exception_send == False):
         subcejt = "UPS: Exception warning"
         msg = """WARNING: Caught exception in subprocess. Unable to read UPS status."""
-        emailSender.send_massage(subcejt, msg)
+        emailSender.send_massage(None, subcejt, msg)
         exception_send = True
         time_counter = 0
     else:
@@ -34,10 +35,10 @@ while True:
             online_send = False
             exception_send = False
             time_counter = 0
-            emailSender.send_massage(subcejt, msg)
+            emailSender.send_massage(None, subcejt, msg)
 
         elif status == "ONBATT":
-            if  on_battery_mode_send == False:
+            if not on_battery_mode_send:
 
                 if comm_lost_send:
                     msg = "Info: Communication has been restored."
@@ -52,7 +53,7 @@ while True:
                 online_send = False
                 exception_send = False
                 time_counter = 0
-                emailSender.send_massage(subcejt, msg)
+                emailSender.send_massage(None, subcejt, msg)
             elif (float(battery)<first_battery_threshold) & (float(battery)>=second_battery_threshold) & (battery_below_50_send==False):
                 subcejt = "UPS: Battery half empty"
                 msg = "ALERT: The battery charge level has dropped below "+str(first_battery_threshold)+"""%.
@@ -61,7 +62,7 @@ while True:
                 """ + "\r\n\nInformation from \r\n"+"Date: "+str(date)+"\r\ntime: "+str(time)+"\r\ntime zone: "+str(time_zone)
                 battery_below_50_send = True
                 time_counter = 0
-                emailSender.send_massage(subcejt, msg)
+                emailSender.send_massage(None, subcejt, msg)
             elif (float(battery)<second_battery_threshold) & (battery_below_20_send==False):
                 subcejt = "UPS: BATTERY CRITICALLY LOW"
                 msg = "EMERGENCY: The battery charge level has dropped below "+str(second_battery_threshold)+"""%. Take the necessary actions to prevent system failure.
@@ -70,7 +71,7 @@ while True:
                 """ + "\r\n\nInformation from \r\n"+"Date: "+str(date)+"\r\ntime: "+str(time)+"\r\ntime zone: "+str(time_zone)
                 battery_below_20_send = True
                 time_counter = 0
-                emailSender.send_massage(subcejt, msg)
+                emailSender.send_massage(None, subcejt, msg)
 
         elif (status == "ONLINE") & (online_send==False):
             subcejt = "UPS: Power source active"
@@ -90,9 +91,11 @@ while True:
             battery_below_50_send = False
             battery_below_20_send = False
             exception_send = False
-            emailSender.send_massage(subcejt, msg)
+            emailSender.send_massage(None, subcejt, msg)
             online_send = True
             time_counter = 0
+
+    emailSender.check_emails()
 
     if time_counter >= time_threshold:
         comm_lost_send = False

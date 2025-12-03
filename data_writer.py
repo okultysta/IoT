@@ -27,12 +27,12 @@ def add_recipient(new_email, filename="email_config.txt"):
             file.write(line)
     return True
 
+
 def delete_recipient(email, filename="email_config.txt"):
     lines = []
     recipients = file_loader.load_recipients(filename)
 
     if email not in recipients:
-        print("Email is not on the list")
         return False
 
     with open(filename, "r") as file:
@@ -46,4 +46,18 @@ def delete_recipient(email, filename="email_config.txt"):
 
     return True
 
-delete_recipient("pomidor@g.pl")
+
+def set_setting(param, value, filename="settings_config.txt"):
+    lines = []
+
+    with open(filename, "r") as file:
+        lines = file.readlines()
+
+    with open(filename, "w") as file:
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith(param):
+                file.write(param + " = " + value + "\n")
+            else:
+                file.write(line)
+    return

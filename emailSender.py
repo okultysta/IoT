@@ -1,11 +1,8 @@
 
 from email.message import EmailMessage
 import smtplib
-
-import time as tm ############################### do usunięcia
-
 from imap_tools import MailBox, AND
-
+import APC_status
 import data_writer
 import file_loader
 
@@ -35,19 +32,12 @@ def check_emails():
 
     with (MailBox(IMAP_SERVER).login(SMTP_User, SMTP_Password) as mailbox):
         for msg in mailbox.fetch(AND(seen=False)):
-            print("From:", msg.from_) ############################### do usunięcia
-            print("Topic:", msg.subject) ############################### do usunięcia
-            print("Body:", msg.text or msg.html) ############################### do usunięcia
             if(msg.from_ in recipients):
-                print("znam ten email") ############################### do usunięcia
-
                 if(msg.subject == "GET"):
                     if(msg.text.startswith("Get Emails") or msg.html.startswith("Get Emails")):
-                        print("wysyłam listę maili") ############################### do usunięcia
                         body = "\n".join(recipients)
                         send_massage(msg.from_, "Emails List", body)
                     elif(msg.text.startswith("Get Email Settings") or msg.html.startswith("Get Email Settings")):
-                        print("wysyłam listę ustawień") ############################### do usunięcia
                         body = "Email Settings:\n"
                         body += "SMTP settings\n"
                         body += "SMTP_Server = " + str(SMTP_Server) + "\n"
@@ -64,7 +54,7 @@ def check_emails():
                         send_massage(msg.from_, "Email Settings", body)
 
                     elif (msg.text.startswith("Get Program Settings") or msg.html.startswith("Get Program Settings")):
-                        first_battery_threshold, second_battery_threshold, time_counter, time_threshold, period = file_loader.emailSender.load_settings()
+                        first_battery_threshold, second_battery_threshold, time_counter, time_threshold, period = file_loader.load_settings()
                         body = "Program Settings:\n"
                         body += "first_battery_threshold = " + str(first_battery_threshold)  + "\n"
                         body += "second_battery_threshold = " + str(second_battery_threshold) + "\n"
@@ -74,8 +64,30 @@ def check_emails():
 
                         send_massage(msg.from_, "Program Settings", body)
 
+                    elif (msg.text.startswith("Get Status") or msg.html.startswith("Get Status")):
+                        status, battery, time_left, date, time, time_zone = APC_status.get_ups_status()
+                        if (status is None):
+                            body = "I was unable to read status of APC."
+                            send_massage(msg.from_, "Action Failed", body)
+                            continue
+                        body = "APC Current Status:\n"
+                        body += "Status: " + str(status) + "\n"
+                        body += "Battery: " + str(battery) + "\n"
+                        body += "TimeLeft: " + str(time_left) + "\n"
+                        body += "Date: " + str(date) + "\n"
+                        body += "Time: " + str(time) + "\n"
+                        body += "TimeZone: " + str(time_zone) + "\n"
+                        send_massage(msg.from_, "APC Status", body)
+
+                    elif (msg.text.startswith("Get Full Status") or msg.html.startswith("Get Full Status")):
+                        if (status is None):
+                            body = "I was unable to read status of APC."
+                            send_massage(msg.from_, "Action Failed", body)
+                            continue
+                        body = APC_status.get_full_status()
+                        send_massage(msg.from_, "APC Full Status", body)
+
                     elif(msg.text.startswith("Get All") or msg.html.startswith("Get All")):
-                        print("wysyłam wszystko") ############################### do usunięcia
                         body = "Settings:\n"
                         body += "SMTP settings\n"
                         body += "SMTP_Server = " + str(SMTP_Server) + "\n"
@@ -102,12 +114,10 @@ def check_emails():
                         send_massage(msg.from_, "All Info about settings", body)
 
                     else:
-                        print("Nie znana komenda") ############################### do usunięcia
                         body = "Recived command:\n"
                         body += msg.text or msg.html
                         body += "\n is not recognized. Please try again."
                         send_massage(msg.from_, "Unknown command", body)
-                        print("wysłałem") ############################### do usunięcia
 
                 elif(msg.subject == "POST"):
                     if msg.text.startswith("Add Email = ") or msg.html.startswith("Add Email = "):
@@ -128,31 +138,41 @@ def check_emails():
                             body = "Unable to delete email:\n" + str(new_email) + "\nEmail is not on the list."
                             send_massage(msg.from_, "Action Failed", body)
 
+                    elif msg.text.startswith("first_threshold = ") or msg.html.startswith("first_threshold = "):
+                        value = msg.text.split("=")[1].split(" ")[0].strip()
+                        data_writer.set_setting("first_battery_threshold", value)
+                        body = "First Battery Threshold was successfully set to " + str(value) + "."
+                        send_massage(msg.from_, "Action was successful", body)
+
+                    elif msg.text.startswith("second_threshold = ") or msg.html.startswith("second_threshold = "):
+                        value = msg.text.split("=")[1].split(" ")[0].strip()
+                        data_writer.set_setting("second_battery_threshold", value)
+                        body = "Second Battery Threshold was successfully set to " + str(value) + "."
+                        send_massage(msg.from_, "Action was successful", body)
+
+                    elif msg.text.startswith("time_threshold = ") or msg.html.startswith("time_threshold = "):
+                        value = msg.text.split("=")[1].split(" ")[0].strip()
+                        data_writer.set_setting("time_threshold", value)
+                        body = "Time threshold was successfully set to " + str(value) + "."
+                        send_massage(msg.from_, "Action was successful", body)
+
+                    elif msg.text.startswith("period = ") or msg.html.startswith("period = "):
+                        value = msg.text.split("=")[1].split(" ")[0].strip()
+                        data_writer.set_setting("period", value)
+                        body = "Period was successfully set to " + str(value) + "."
+                        send_massage(msg.from_, "Action was successful", body)
 
                     else:
-                        print("Nie znana komenda")  ############################### do usunięcia
                         body = "Recived command:\n"
                         body += msg.text or msg.html
                         body += "\n is not recognized. Please try again."
                         send_massage(msg.from_, "Unknown command", body)
-                        print("wysłałem")  ############################### do usunięcia
 
                 else:
                     body = "Method:\n" + str(msg.subject) + "\nin not recognized. Pleas Try again."
                     send_massage(msg.from_, "Unrecognized Method", body)
 
-
-
-
-
-
             else:
-                print("nie znam tego emailu")
                 body = "This email was not recognized. Please contact the administrator."
                 send_massage(msg.from_, "Unknown email", body)
-
-
-while True:
-    check_emails()
-    tm.sleep(5)
 

@@ -27,3 +27,10 @@ def get_ups_status():
             time_zone = line.split(" ")[6].strip()
 
     return status, battery, time_left, date, time, time_zone
+
+def get_full_status():
+    try:
+        output = subprocess.check_output(['apcaccess', 'status'], text=True)
+    except subprocess.CalledProcessError:
+        return None
+    return output
