@@ -29,6 +29,8 @@ def send_massage(recip ,subject, msg):
 
 def check_emails():
     SMTP_Server, SMTP_Port, IMAP_Port, SMTP_User, SMTP_Password, Sender_Email, recipients, IMAP_SERVER = file_loader.load_emial_sender_data()
+    first_battery_threshold, second_battery_threshold, time_threshold, period = file_loader.load_settings()
+    status, battery, time_left, date, time, time_zone = APC_status.get_ups_status()
 
     with (MailBox(IMAP_SERVER).login(SMTP_User, SMTP_Password) as mailbox):
         for msg in mailbox.fetch(AND(seen=False)):
@@ -54,18 +56,15 @@ def check_emails():
                         send_massage(msg.from_, "Email Settings", body)
 
                     elif (msg.text.startswith("Get Program Settings") or msg.html.startswith("Get Program Settings")):
-                        first_battery_threshold, second_battery_threshold, time_counter, time_threshold, period = file_loader.load_settings()
                         body = "Program Settings:\n"
                         body += "first_battery_threshold = " + str(first_battery_threshold)  + "\n"
                         body += "second_battery_threshold = " + str(second_battery_threshold) + "\n"
-                        body += "time_counter = " + str(time_counter) + "\n"
                         body += "time_threshold = " + str(time_threshold) + "\n"
                         body += "period = " + str(period) + "\n"
 
                         send_massage(msg.from_, "Program Settings", body)
 
                     elif (msg.text.startswith("Get Status") or msg.html.startswith("Get Status")):
-                        status, battery, time_left, date, time, time_zone = APC_status.get_ups_status()
                         if (status is None):
                             body = "I was unable to read status of APC."
                             send_massage(msg.from_, "Action Failed", body)
@@ -83,11 +82,11 @@ def check_emails():
                         if (status is None):
                             body = "I was unable to read status of APC."
                             send_massage(msg.from_, "Action Failed", body)
-                            continue
-                        body = APC_status.get_full_status()
-                        send_massage(msg.from_, "APC Full Status", body)
+                        else:
+                            body = APC_status.get_full_status()
+                            send_massage(msg.from_, "APC Full Status", body)
 
-                    elif(msg.text.startswith("Get All") or msg.html.startswith("Get All")):
+                    elif(msg.text.startswith("Get All Settings") or msg.html.startswith("Get All Settings")):
                         body = "Settings:\n"
                         body += "SMTP settings\n"
                         body += "SMTP_Server = " + str(SMTP_Server) + "\n"
@@ -104,10 +103,9 @@ def check_emails():
                         body += "Recipients List\n"
                         body += "\n".join(recipients)
 
-                        body += "Program Settings\n"
+                        body += "\nProgram Settings\n"
                         body += "first_battery_threshold = " + str(first_battery_threshold) + "\n"
                         body += "second_battery_threshold = " + str(second_battery_threshold) + "\n"
-                        body += "time_counter = " + str(time_counter) + "\n"
                         body += "time_threshold = " + str(time_threshold) + "\n"
                         body += "period = " + str(period) + "\n"
 
@@ -121,8 +119,11 @@ def check_emails():
 
                 elif(msg.subject == "POST"):
                     if msg.text.startswith("Add Email = ") or msg.html.startswith("Add Email = "):
-                        new_email = msg.text.split("=")[1].split(" ")[0].strip()
-                        if data_writer.add_recipient(new_email):
+                        new_email = msg.text.split("=")[1].split(" ")[1].strip()
+                        if new_email == "":
+                            body = "There was a problem while adding an email. Address was empty. Please try again"
+                            send_massage(msg.from_, "Action Failed", body)
+                        elif data_writer.add_recipient(new_email):
                             body = "Email:\n" + str(new_email) + "\nwas successfully added."
                             send_massage(msg.from_, "Action was successful", body)
                         else:
@@ -130,37 +131,56 @@ def check_emails():
                             send_massage(msg.from_, "Action Failed", body)
 
                     elif msg.text.startswith("Delete Email = ") or msg.html.startswith("Delete Email = "):
-                        email = msg.text.split("=")[1].split(" ")[0].strip()
-                        if data_writer.delete_recipient(email):
-                            body = "Email:\n" + str(new_email) + "\nwas successfully deleted from the list."
+                        email = msg.text.split("=")[1].split(" ")[1].strip()
+                        if email == "":
+                            body = "There was a problem while deleting an email. Address was empty. Please try again"
+                            send_massage(msg.from_, "Action Failed", body)
+                        elif data_writer.delete_recipient(email):
+                            body = "Email:\n" + str(email) + "\nwas successfully deleted from the list."
                             send_massage(msg.from_, "Action was successful", body)
                         else:
                             body = "Unable to delete email:\n" + str(new_email) + "\nEmail is not on the list."
                             send_massage(msg.from_, "Action Failed", body)
 
                     elif msg.text.startswith("first_threshold = ") or msg.html.startswith("first_threshold = "):
-                        value = msg.text.split("=")[1].split(" ")[0].strip()
-                        data_writer.set_setting("first_battery_threshold", value)
-                        body = "First Battery Threshold was successfully set to " + str(value) + "."
-                        send_massage(msg.from_, "Action was successful", body)
+                        value = msg.text.split("=")[1].split(" ")[1].strip()
+                        if value == "":
+                            body = "There was a problem while setting first threshold. Value was empty. Please try again"
+                            send_massage(msg.from_, "Action Failed", body)
+                        else:
+                            data_writer.set_setting("first_battery_threshold", value)
+                            body = "First Battery Threshold was successfully set to " + str(value) + "."
+                            send_massage(msg.from_, "Action was successful", body)
 
                     elif msg.text.startswith("second_threshold = ") or msg.html.startswith("second_threshold = "):
-                        value = msg.text.split("=")[1].split(" ")[0].strip()
-                        data_writer.set_setting("second_battery_threshold", value)
-                        body = "Second Battery Threshold was successfully set to " + str(value) + "."
-                        send_massage(msg.from_, "Action was successful", body)
+                        value = msg.text.split("=")[1].split(" ")[1].strip()
+                        if value == "":
+                            body = "There was a problem while setting second threshold. Value was empty. Please try again"
+                            send_massage(msg.from_, "Action Failed", body)
+                        else:
+                            data_writer.set_setting("second_battery_threshold", value)
+                            body = "Second Battery Threshold was successfully set to " + str(value) + "."
+                            send_massage(msg.from_, "Action was successful", body)
 
                     elif msg.text.startswith("time_threshold = ") or msg.html.startswith("time_threshold = "):
-                        value = msg.text.split("=")[1].split(" ")[0].strip()
-                        data_writer.set_setting("time_threshold", value)
-                        body = "Time threshold was successfully set to " + str(value) + "."
-                        send_massage(msg.from_, "Action was successful", body)
+                        value = msg.text.split("=")[1].split(" ")[1].strip()
+                        if value == "":
+                            body = "There was a problem while setting time threshold. Value was empty. Please try again"
+                            send_massage(msg.from_, "Action Failed", body)
+                        else:
+                            data_writer.set_setting("time_threshold", value)
+                            body = "Time threshold was successfully set to " + str(value) + "."
+                            send_massage(msg.from_, "Action was successful", body)
 
                     elif msg.text.startswith("period = ") or msg.html.startswith("period = "):
-                        value = msg.text.split("=")[1].split(" ")[0].strip()
-                        data_writer.set_setting("period", value)
-                        body = "Period was successfully set to " + str(value) + "."
-                        send_massage(msg.from_, "Action was successful", body)
+                        value = msg.text.split("=")[1].split(" ")[1].strip()
+                        if value == "":
+                            body = "There was a problem while setting period. Value was empty. Please try again"
+                            send_massage(msg.from_, "Action Failed", body)
+                        else:
+                            data_writer.set_setting("period", value)
+                            body = "Period was successfully set to " + str(value) + "."
+                            send_massage(msg.from_, "Action was successful", body)
 
                     else:
                         body = "Recived command:\n"
@@ -175,4 +195,3 @@ def check_emails():
             else:
                 body = "This email was not recognized. Please contact the administrator."
                 send_massage(msg.from_, "Unknown email", body)
-

@@ -44,6 +44,8 @@ while True:
 
                 if comm_lost_send:
                     msg = "Info: Communication has been restored."
+                else:
+                    msg = ""
 
                 subcejt = "UPS: Lost power source"
                 msg += """\r\nWARNING: The power source is off. APC has switched to battery mode.
@@ -99,7 +101,7 @@ while True:
 
     emailSender.check_emails()
 
-    if time_counter >= time_threshold:
+    if time_counter >= int(time_threshold):
         comm_lost_send = False
         on_battery_mode_send = False
         battery_below_50_send = False
@@ -108,5 +110,5 @@ while True:
         exception_send = False
         time_counter = 0
 
-    time_counter += period
-    tm.sleep(period)
+    time_counter += int(period)
+    tm.sleep(int(period))

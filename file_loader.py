@@ -11,7 +11,7 @@ def load_settings(filename="settings_config.txt"):
             elif line.startswith("period"):
                 period = line.split("=")[1].strip()
 
-        return first_battery_threshold, second_battery_threshold, time_threshold, period
+        return int(first_battery_threshold), int(second_battery_threshold), int(time_threshold), int(period)
 
 
 def load_emial_sender_data(filename="email_config.txt"):
